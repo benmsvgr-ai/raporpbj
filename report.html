@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rapor PBJ</title>
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href='data:image/svg+xml;utf8,
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="14" fill="%230f4c81"/>
+      <path d="M18 16h20c6.627 0 12 5.373 12 12s-5.373 12-12 12H28v12H18V16zm10 10v4h10a4 4 0 1 0 0-8H28v4z" fill="%23ffffff"/>
+      <path d="M34 38h8c2.761 0 5 2.239 5 5s-2.239 5-5 5h-8v-10zm4 4v2h4a1 1 0 1 0 0-2h-4z" fill="%2397d4ff"/>
+      <path d="M18 48h10" stroke="%2397d4ff" stroke-width="4" stroke-linecap="round"/>
+    </svg>'>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
     * { box-sizing: border-box; }
@@ -852,43 +862,39 @@
       }).format(n);
     }
 
-function parsePercentNumber(value) {
-  if (value == null || value === '') return 0;
-  if (typeof value === 'number') return value;
+    function parsePercentNumber(value) {
+      if (value == null || value === '') return 0;
+      if (typeof value === 'number') return value;
 
-  let str = String(value).trim();
-  if (!str || str === '-') return 0;
+      let str = String(value).trim();
+      if (!str || str === '-') return 0;
 
-  str = str.replace('%', '').trim();
+      str = str.replace('%', '').trim();
 
-  const hasDot = str.indexOf('.') !== -1;
-  const hasComma = str.indexOf(',') !== -1;
+      const hasDot = str.indexOf('.') !== -1;
+      const hasComma = str.indexOf(',') !== -1;
 
-  if (hasDot && hasComma) {
-    // format ribuan + desimal, mis. 1.234,56
-    str = str.replace(/\./g, '').replace(',', '.');
-  } else if (hasComma) {
-    // format desimal indo, mis. 99,99
-    str = str.replace(',', '.');
-  } else {
-    // format desimal biasa, mis. 99.99
-    str = str;
-  }
+      if (hasDot && hasComma) {
+        str = str.replace(/\./g, '').replace(',', '.');
+      } else if (hasComma) {
+        str = str.replace(',', '.');
+      }
 
-  const num = parseFloat(str);
-  return isNaN(num) ? 0 : num;
-}
-    
-function formatPercentValue(value) {
-  if (value == null || value === '') return '-';
+      const num = parseFloat(str);
+      return isNaN(num) ? 0 : num;
+    }
 
-  const num = parsePercentNumber(value);
+    function formatPercentValue(value) {
+      if (value == null || value === '') return '-';
 
-  return new Intl.NumberFormat('id-ID', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(num) + '%';
-}
+      const num = parsePercentNumber(value);
+
+      return new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(num) + '%';
+    }
+
     function formatPercentFixed2(value) {
       if (value == null || value === '') return '-';
 
@@ -900,8 +906,8 @@ function formatPercentValue(value) {
         const str = String(value).trim();
         if (!str || str === '-') return '-';
         num = str.includes('%')
-          ? parseMoney(str.replace('%', ''))
-          : parseMoney(str);
+          ? parsePercentNumber(str)
+          : parsePercentNumber(str);
       }
 
       return new Intl.NumberFormat('id-ID', {
@@ -912,7 +918,7 @@ function formatPercentValue(value) {
 
     function monthLabel(bulan) {
       const map = {
-        '1': 'JANUARI',
+        '1': 'MARET' === 'JANUARI' ? 'JANUARI' : 'JANUARI',
         '2': 'FEBRUARI',
         '3': 'MARET',
         '4': 'APRIL',
@@ -1157,6 +1163,9 @@ function formatPercentValue(value) {
       const analisis = data.analisis_manual || {};
       const aiReport = data.ai_report || {};
 
+      const namaTitleOpd = String(index.nama_opd || '').trim();
+      document.title = namaTitleOpd ? ('Rapor PBJ - ' + namaTitleOpd) : 'Rapor PBJ';
+
       document.getElementById('status').style.display = 'none';
       document.getElementById('content').style.display = 'block';
 
@@ -1180,18 +1189,18 @@ function formatPercentValue(value) {
         ' | Updated At: ' + (index.updated_at || '-')
       );
 
-setText('sirup_penyedia', formatMoney(sirup.total_pagu_penyedia));
-setText('sirup_swakelola', formatMoney(sirup.total_pagu_swakelola));
-setText('sirup_total', formatMoney(sirup.total_pagu_sirup));
-setText('sirup_struktur', formatMoney(sirup.total_struktur_anggaran_rup));
-setText('sirup_persentase', formatPercentValue(sirup.persentase));
+      setText('sirup_penyedia', formatMoney(sirup.total_pagu_penyedia));
+      setText('sirup_swakelola', formatMoney(sirup.total_pagu_swakelola));
+      setText('sirup_total', formatMoney(sirup.total_pagu_sirup));
+      setText('sirup_struktur', formatMoney(sirup.total_struktur_anggaran_rup));
+      setText('sirup_persentase', formatPercentValue(sirup.persentase));
 
-setText('sirup_penyedia_2', formatMoney(sirup.total_pagu_penyedia));
-setText('sirup_swakelola_2', formatMoney(sirup.total_pagu_swakelola));
-setText('sirup_total_2', formatMoney(sirup.total_pagu_sirup));
-setText('sirup_struktur_2', formatMoney(sirup.total_struktur_anggaran_rup));
-setText('sirup_persentase_2', formatPercentValue(sirup.persentase));
-      
+      setText('sirup_penyedia_2', formatMoney(sirup.total_pagu_penyedia));
+      setText('sirup_swakelola_2', formatMoney(sirup.total_pagu_swakelola));
+      setText('sirup_total_2', formatMoney(sirup.total_pagu_sirup));
+      setText('sirup_struktur_2', formatMoney(sirup.total_struktur_anggaran_rup));
+      setText('sirup_persentase_2', formatPercentValue(sirup.persentase));
+
       setHtml(
         'img_struktur',
         renderImageOrLink(
@@ -1355,6 +1364,7 @@ setText('sirup_persentase_2', formatPercentValue(sirup.persentase));
 
         if (!data.index.id_rapot) {
           document.getElementById('status').innerText = 'Data report tidak ditemukan untuk ID: ' + id;
+          document.title = 'Rapor PBJ';
           return;
         }
 
@@ -1362,6 +1372,7 @@ setText('sirup_persentase_2', formatPercentValue(sirup.persentase));
       } catch (err) {
         document.getElementById('status').innerText =
           'Error server: ' + failureMessage(err);
+        document.title = 'Rapor PBJ';
       }
     }
 
