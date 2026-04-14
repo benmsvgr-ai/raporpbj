@@ -685,8 +685,10 @@
         sirup: 'SIRUP_STRUKTUR_ANGGARAN',
         perencanaan: 'PERENCANAAN',
         realisasi: 'REALISASI',
+        pelaku: 'PELAKU',
+        itkp: 'ITKP',
         analisis: 'ANALISIS_MANUAL',
-        itkp: 'ITKP'
+        aiReport: 'AI_REPORT'
       }
     };
 
@@ -953,7 +955,9 @@
     }
 
     function findRowById(rows, idRapot) {
-      return (rows || []).map(normalizeRecordKeys).find(r => String(r.id_rapot || '').trim() === String(idRapot || '').trim()) || {};
+      return (rows || [])
+        .map(normalizeRecordKeys)
+        .find(r => String(r.id_rapot || '').trim() === String(idRapot || '').trim()) || {};
     }
 
     function formatVoiceTime(ms) {
@@ -1054,16 +1058,12 @@
     }
 
     function getNarrationTextForSpeech() {
-      const fromAi = String(aiVoiceText || '').trim();
-      if (fromAi) return fromAi;
+      const fromAiVoice = String(aiVoiceText || '').trim();
+      if (fromAiVoice) return fromAiVoice;
 
-      const box = document.getElementById('narasi_ai_box');
-      const fromBox = box ? String(box.innerText || '').trim() : '';
-
+      const fromBox = String(document.getElementById('narasi_ai_box')?.innerText || '').trim();
       if (!fromBox) return '';
       if (fromBox === 'Belum ada Analisa AI.') return '';
-      if (fromBox.indexOf('Fitur AI publik belum aktif.') === 0) return '';
-
       return fromBox;
     }
 
@@ -1079,14 +1079,13 @@
         return;
       }
 
-      const rate = 1.12;
-      const pitch = 1.08;
+      const rate = 1.08;
+      const pitch = 1.0;
       const estimatedDuration = estimateSpeechDurationMs(text, rate);
 
       window.speechSynthesis.cancel();
       isSpeaking = false;
 
-      aiVoiceText = text;
       currentUtterance = new SpeechSynthesisUtterance(text);
       currentUtterance.lang = 'id-ID';
       currentUtterance.rate = rate;
@@ -1118,7 +1117,7 @@
 
       setTimeout(function() {
         window.speechSynthesis.speak(currentUtterance);
-      }, 120);
+      }, 150);
     }
 
     function stopNarasiAI() {
@@ -1140,26 +1139,15 @@
       btn.innerText = hidden ? 'Minimize' : 'Tampilkan';
     }
 
-    function setPublicAiFallback(analisisText) {
-      const text = String(analisisText || '').trim();
-      if (text) {
-        setText('narasi_ai_box', text);
-        aiVoiceText = text;
-        setText('voice_status_box', 'Klik "Play" untuk membacakan analisa.');
-      } else {
-        setText('narasi_ai_box', 'Fitur AI publik belum aktif.');
-        aiVoiceText = '';
-        setText('voice_status_box', 'Analisa AI belum tersedia untuk dibacakan.');
-      }
-    }
-
     function render(data) {
       const index = data.index || {};
       const sirup = data.sirup || {};
       const perencanaan = data.perencanaan || {};
       const realisasi = data.realisasi || {};
-      const analisis = data.analisis_manual || {};
+      const pelaku = data.pelaku || {};
       const itkp = data.itkp || {};
+      const analisis = data.analisis_manual || {};
+      const aiReport = data.ai_report || {};
 
       document.getElementById('status').style.display = 'none';
       document.getElementById('content').style.display = 'block';
@@ -1281,9 +1269,16 @@
       setText('r_total_paket', formatInteger(totalRealisasiPaket));
       setText('r_total_anggaran', formatMoney(totalRealisasiAnggaran));
 
-      setText('pelaku_jumlah', '-');
-      setText('pelaku_daftar', 'Data pelaku tidak dipublikasikan pada file dashboard publik.');
-      setHtml('pelaku_file', '<div class="muted">Data dokumen pendukung tidak dipublikasikan.</div>');
+      setText('pelaku_jumlah', pelaku.jumlah_pp_ppk || '-');
+      setText('pelaku_daftar', pelaku.daftar_pp_ppk || '-');
+
+      setHtml(
+        'pelaku_file',
+        renderLinkOnly(
+          pelaku.link_dokumen_pendukung || pelaku.file_url || '',
+          'Dokumen Pendukung'
+        )
+      );
 
       setHtml(
         'img_itkp',
@@ -1295,9 +1290,21 @@
 
       setHtml('analisis_manual', renderBullets(analisis.kesimpulan_progres || '-'));
 
+      const narasiAi = String(aiReport.narasi_ai || '').trim();
+      const narasiAiVoice = String(aiReport.narasi_ai_voice || '').trim();
+
+      if (narasiAi) {
+        setText('narasi_ai_box', narasiAi);
+        aiVoiceText = narasiAiVoice || narasiAi;
+        setText('voice_status_box', 'Klik "Play" untuk membacakan analisa.');
+      } else {
+        setText('narasi_ai_box', 'Belum ada Analisa AI.');
+        aiVoiceText = '';
+        setText('voice_status_box', 'Analisa AI belum tersedia untuk dibacakan.');
+      }
+
       resetVoiceProgress(0);
       prepareVoices();
-      setPublicAiFallback(analisis.kesimpulan_progres || '');
     }
 
     async function loadReportData() {
@@ -1312,15 +1319,19 @@
           sirupRows,
           perencanaanRows,
           realisasiRows,
+          pelakuRows,
+          itkpRows,
           analisisRows,
-          itkpRows
+          aiRows
         ] = await Promise.all([
           fetchSheet(CONFIG.SHEETS.index),
           fetchSheet(CONFIG.SHEETS.sirup),
           fetchSheet(CONFIG.SHEETS.perencanaan),
           fetchSheet(CONFIG.SHEETS.realisasi),
+          fetchSheet(CONFIG.SHEETS.pelaku),
+          fetchSheet(CONFIG.SHEETS.itkp),
           fetchSheet(CONFIG.SHEETS.analisis),
-          fetchSheet(CONFIG.SHEETS.itkp)
+          fetchSheet(CONFIG.SHEETS.aiReport)
         ]);
 
         const data = {
@@ -1328,8 +1339,10 @@
           sirup: findRowById(sirupRows, id),
           perencanaan: findRowById(perencanaanRows, id),
           realisasi: findRowById(realisasiRows, id),
+          pelaku: findRowById(pelakuRows, id),
+          itkp: findRowById(itkpRows, id),
           analisis_manual: findRowById(analisisRows, id),
-          itkp: findRowById(itkpRows, id)
+          ai_report: findRowById(aiRows, id)
         };
 
         if (!data.index.id_rapot) {
