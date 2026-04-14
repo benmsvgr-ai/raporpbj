@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Report Rapot PBJ</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef3f8;
+      margin: 0;
+      padding: 24px;
+      color: #0f172a;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .narasi-toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #0f172a;
+      color: #fff;
+    }
+
+    .btn.secondary {
+      background: #dbe4ee;
+      color: #0f172a;
+    }
+
+    .btn.disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .status {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      font-weight: 700;
+      white-space: pre-wrap;
+    }
+
+    .page {
+      background: #fff;
+      border-radius: 18px;
+      margin-bottom: 24px;
+      overflow: hidden;
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08);
+      page-break-after: always;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    .page-head {
+      background: linear-gradient(135deg, #0f4c81, #1f6aa5);
+      color: #fff;
+      padding: 28px 32px;
+    }
+
+    .page-head h1,
+    .page-head h2 {
+      margin: 0;
+    }
+
+    .narasi-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .head-toggle-btn {
+      border:none;
+      border-radius:10px;
+      padding:10px 14px;
+      font-weight:700;
+      cursor:pointer;
+      background:rgba(255,255,255,.18);
+      color:#fff;
+      backdrop-filter: blur(4px);
+    }
+
+    .head-toggle-btn:hover {
+      background:rgba(255,255,255,.28);
+    }
+
+    .cover {
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .cover .main-title {
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+    }
+
+    .cover .sub-title {
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.4;
+      text-transform: uppercase;
+    }
+
+    .cover .period {
+      margin-top: 22px;
+      font-size: 22px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .page-body {
+      padding: 24px 28px 28px;
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #0f4c81;
+      text-transform: uppercase;
+      margin: 0 0 18px;
+      line-height: 1.3;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .meta-box {
+      background: #f8fafc;
+      border: 1px solid #dbe4ee;
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+
+    .meta-label {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .meta-value {
+      font-size: 18px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .note-line {
+      font-size: 14px;
+      color: #475569;
+      margin-top: 10px;
+    }
+
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .summary-box {
+      background: #f8fbff;
+      border: 1px solid #dbeafe;
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .summary-box .label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .summary-box .value {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid #cfd8e3;
+      padding: 10px 12px;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #0f4c81;
+      color: #fff;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    td {
+      background: #fff;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 14px;
+    }
+
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .bold { font-weight: 700; }
+
+    .img-box {
+      background: #f8fafc;
+      border: 1px solid #dbe4ee;
+      border-radius: 14px;
+      padding: 14px;
+      min-height: 120px;
+    }
+
+    .img-box img {
+      display: block;
+      max-width: 100%;
+      max-height: 520px;
+      object-fit: contain;
+      margin: 0 auto;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .link-box, .note-box {
+      background: #f8fafc;
+      border: 1px solid #dbe4ee;
+      border-radius: 14px;
+      padding: 14px;
+      word-break: break-word;
+      white-space: pre-wrap;
+      line-height: 1.7;
+    }
+
+    .bullets {
+      margin: 0;
+      padding-left: 20px;
+      line-height: 1.8;
+      font-size: 15px;
+    }
+
+    .muted {
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    .voice-panel {
+      background: #f8fbff;
+      border: 1px solid #dbeafe;
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 14px;
+    }
+
+    .voice-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 10px;
+    }
+
+    .voice-progress {
+      width: 100%;
+      height: 10px;
+      background: #dbe4ee;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .voice-progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #0f4c81, #2f7cc2);
+      transition: width .12s linear;
+    }
+
+    @media (max-width: 900px) {
+      body { padding: 12px; }
+      .meta-grid,
+      .summary-strip {
+        grid-template-columns: 1fr;
+      }
+      .cover .main-title { font-size: 30px; }
+      .cover .sub-title { font-size: 21px; }
+      .cover .period { font-size: 18px; }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+      .toolbar, .narasi-toolbar, #status {
+        display: none !important;
+      }
+      .page {
+        box-shadow: none;
+        border-radius: 0;
+        margin: 0 0 18px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="toolbar">
+      <button class="btn" onclick="window.print()">Print / Save PDF</button>
+    </div>
+
+    <div id="status" class="status">Memuat laporan...</div>
+
+    <div id="content" style="display:none;">
+
+      <div class="page">
+        <div class="page-head cover">
+          <div class="main-title">RAPORT PBJ OPD</div>
+          <div class="sub-title" id="cover_nama_opd">-</div>
+          <div class="period" id="cover_periode">PERIODE -</div>
+        </div>
+        <div class="page-body">
+          <div class="meta-grid">
+            <div class="meta-box">
+              <div class="meta-label">ID Rapot</div>
+              <div class="meta-value" id="v_id_rapot">-</div>
+            </div>
+            <div class="meta-box">
+              <div class="meta-label">Status QC</div>
+              <div class="meta-value" id="v_status_qc">-</div>
+            </div>
+            <div class="meta-box">
+              <div class="meta-label">Kode OPD</div>
+              <div class="meta-value" id="v_kode_opd">-</div>
+            </div>
+            <div class="meta-box">
+              <div class="meta-label">Nama OPD</div>
+              <div class="meta-value" id="v_nama_opd">-</div>
+            </div>
+          </div>
+          <div class="note-line" id="metaHeader">-</div>
+        </div>
+      </div>
+
+      <div class="page">
+        <div class="page-head">
+          <h2>STRUKTUR ANGGARAN PBJ PERANGKAT DAERAH</h2>
+        </div>
+        <div class="page-body">
+          <div class="summary-strip">
+            <div class="summary-box">
+              <div class="label">Total Pagu Penyedia</div>
+              <div class="value" id="sirup_penyedia">-</div>
+            </div>
+            <div class="summary-box">
+              <div class="label">Total Pagu Swakelola</div>
+              <div class="value" id="sirup_swakelola">-</div>
+            </div>
+            <div class="summary-box">
+              <div class="label">Total Pagu SiRUP</div>
+              <div class="value" id="sirup_total">-</div>
+            </div>
+          </div>
+
+          <div class="summary-strip">
+            <div class="summary-box">
+              <div class="label">Struktur Anggaran RUP</div>
+              <div class="value" id="sirup_struktur">-</div>
+            </div>
+            <div class="summary-box">
+              <div class="label">Prosentase Keterumuman</div>
+              <div class="value" id="sirup_persentase">-</div>
+            </div>
+            <div class="summary-box">
+              <div class="label">Bulan / Tahun</div>
+              <div class="value"><span id="v_bulan">-</span> / <span id="v_tahun">-</span></div>
+            </div>
+          </div>
+
+          <div class="section-title" style="font-size:20px; margin-top:20px;">Screenshot Struktur Anggaran</div>
+          <div id="img_struktur">-</div>
+        </div>
+      </div>
+
+      <div class="page">
+        <div class="page-head">
+          <h2>PROSENTASE KETERUMUMAN SIRUP</h2>
+        </div>
+        <div class="page-body">
+          <div class="table-wrap">
+            <table>
+              <tbody>
+                <tr>
+                  <th style="width:50%;">Uraian</th>
+                  <th>Nilai</th>
+                </tr>
+                <tr>
+                  <td>Total Pagu Penyedia</td>
+                  <td id="sirup_penyedia_2" class="right">-</td>
+                </tr>
+                <tr>
+                  <td>Total Pagu Swakelola</td>
+                  <td id="sirup_swakelola_2" class="right">-</td>
+                </tr>
+                <tr>
+                  <td>Total Pagu SiRUP</td>
+                  <td id="sirup_total_2" class="right">-</td>
+                </tr>
+                <tr>
+                  <td>Total Struktur Anggaran RUP</td>
+                  <td id="sirup_struktur_2" class="right">-</td>
+                </tr>
+                <tr>
+                  <td class="bold">Prosentase</td>
+                  <td id="sirup_persentase_2" class="right bold">-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="page">
+        <div class="page-head">
+          <h2>DATA PERENCANAAN PENGADAAN PERANGKAT DAERAH</h2>
+        </div>
+        <div class="page-body">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cara Pengadaan</th>
+                  <th>Metode Pemilihan Penyedia</th>
+                  <th>Jumlah Paket</th>
+                  <th>Jumlah Anggaran (Rp)</th>
+                  <th>Prosentase Anggaran (%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="center">Penyedia</td>
+                  <td>Tender & Seleksi</td>
+                  <td id="p_paket_tender" class="center">-</td>
+                  <td id="p_pagu_tender" class="right">-</td>
+                  <td id="p_pct_tender" class="center">-</td>
+                </tr>
+                <tr>
+                  <td class="center">Penyedia</td>
+                  <td>Pengadaan Langsung</td>
+                  <td id="p_paket_non" class="center">-</td>
+                  <td id="p_pagu_non" class="right">-</td>
+                  <td id="p_pct_non" class="center">-</td>
+                </tr>
+                <tr>
+                  <td class="center">Penyedia</td>
+                  <td>E-Purchasing</td>
+                  <td id="p_paket_epur" class="center">-</td>
+                  <td id="p_pagu_epur" class="right">-</td>
+                  <td id="p_pct_epur" class="center">-</td>
+                </tr>
+                <tr>
+                  <td class="center">Penyedia</td>
+                  <td>Dikecualikan</td>
+                  <td id="p_paket_catat" class="center">-</td>
+                  <td id="p_pagu_catat" class="right">-</td>
+                  <td id="p_pct_catat" class="center">-</td>
+                </tr>
+                <tr>
+                  <td class="center">Swakelola</td>
+                  <td>-</td>
+                  <td id="p_paket_swak" class="center">-</td>
+                  <td id="p_pagu_swak" class="right">-</td>
+                  <td id="p_pct_swak" class="center">-</td>
+                </tr>
+                <tr>
+                  <td class="center bold" colspan="2">TOTAL</td>
+                  <td id="p_total_paket" class="center bold">-</td>
+                  <td id="p_total_pagu" class="right bold">-</td>
+                  <td id="p_total_pct" class="center bold">100,00%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="page">
+        <div class="page-head">
+          <h2>REALISASI PELAKSANAAN PBJ DI PERANGKAT DAERAH</h2>
+        </div>
+        <div class="page-body">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th rowspan="2">Cara Pengadaan</th>
+                  <th rowspan="2">Metode Pemilihan Penyedia</th>
+                  <th colspan="2">Rencana Pengadaan</th>
+                  <th colspan="2">Realisasi</th>
+                </tr>
+                <tr>
+                  <th>Jumlah Paket</th>
+                  <th>Jumlah Anggaran (Rp)</th>
+                  <th>Jumlah Paket</th>
+                  <th>Jumlah Anggaran (Rp)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="center">Penyedia</td>
+                  <td>Tender & Seleksi</td>
+                  <td id="rp_paket_tender" class="center">-</td>
+                  <td id="rp_pagu_tender" class="right">-</td>
+                  <td id="r_paket_tender" class="center">-</td>
+                  <td id="r_anggaran_tender" class="right">-</td>
+                </tr>
+                <tr>
+                  <td class="center">Penyedia</td>
+                  <td>Pengadaan Langsung</td>
+                  <td id="rp_paket_non" class="center">-</td>
+                  <td id="rp_pagu_non" class="right">-</td>
+                  <td id="r_paket_non" class="center">-</td>
+                  <td id="r_anggaran_non" class="right">-</td>
+                </tr>
+                <tr>
+                  <td class="center">Penyedia</td>
+                  <td>E-Purchasing</td>
+                  <td id="rp_paket_epur" class="center">-</td>
+                  <td id="rp_pagu_epur" class="right">-</td>
+                  <td id="r_paket_epur" class="center">-</td>
+                  <td id="r_anggaran_epur" class="right">-</td>
+                </tr>
+                <tr>
+                  <td class="center">Penyedia</td>
+                  <td>Dikecualikan</td>
+                  <td id="rp_paket_catat" class="center">-</td>
+                  <td id="rp_pagu_catat" class="right">-</td>
+                  <td id="r_paket_catat" class="center">-</td>
+                  <td id="r_anggaran_catat" class="right">-</td>
+                </tr>
+                <tr>
+                  <td class="center">Swakelola</td>
+                  <td>-</td>
+                  <td id="rp_paket_swak" class="center">-</td>
+                  <td id="rp_pagu_swak" class="right">-</td>
+                  <td id="r_paket_swak" class="center">-</td>
+                  <td id="r_anggaran_swak" class="right">-</td>
+                </tr>
+                <tr>
+                  <td class="center bold" colspan="2">TOTAL</td>
+                  <td id="rp_total_paket" class="center bold">-</td>
+                  <td id="rp_total_pagu" class="right bold">-</td>
+                  <td id="r_total_paket" class="center bold">-</td>
+                  <td id="r_total_anggaran" class="right bold">-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="page">
+        <div class="page-head">
+          <h2>PELAKU PENGADAAN DI PERANGKAT DAERAH</h2>
+        </div>
+        <div class="page-body">
+          <div class="meta-grid">
+            <div class="meta-box">
+              <div class="meta-label">Jumlah PP&PPK</div>
+              <div class="meta-value" id="pelaku_jumlah">-</div>
+            </div>
+            <div class="meta-box">
+              <div class="meta-label">Daftar PP&PPK</div>
+              <div class="meta-value" id="pelaku_daftar" style="font-size:14px;font-weight:600;">-</div>
+            </div>
+          </div>
+
+          <div class="meta-box">
+            <div class="meta-label">Dokumen Pendukung</div>
+            <div id="pelaku_file" class="meta-value" style="font-size:14px;font-weight:600;">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page">
+        <div class="page-head">
+          <h2>ITKP OPD INDIKATOR PEMANFAATAN SISTEM PENGADAAN</h2>
+        </div>
+        <div class="page-body">
+          <div id="img_itkp">-</div>
+        </div>
+      </div>
+
+      <div class="page">
+        <div class="page-head">
+          <h2>KESIMPULAN DAN SARAN</h2>
+        </div>
+        <div class="page-body">
+          <div id="analisis_manual">-</div>
+        </div>
+      </div>
+
+      <div class="page" id="narasi_ai_section">
+        <div class="page-head narasi-head">
+          <h2>Analisa AI</h2>
+          <button class="head-toggle-btn" type="button" onclick="toggleNarasiSection()" id="narasi_toggle_btn">Tampilkan</button>
+        </div>
+        <div class="page-body" id="narasi_ai_body" style="display:none;">
+          <div id="narasi_ai_box" class="note-box">Belum ada Analisa AI.</div>
+          <div style="height:14px;"></div>
+          <div id="voice_status_box" class="link-box">Klik "Play" untuk membacakan analisa.</div>
+
+          <div class="voice-panel">
+            <div class="voice-meta">
+              <div id="voice_current_label">00:00</div>
+              <div id="voice_total_label">00:00</div>
+            </div>
+            <div class="voice-progress">
+              <div id="voice_progress_fill" class="voice-progress-fill"></div>
+            </div>
+          </div>
+
+          <div class="narasi-toolbar">
+            <button class="btn disabled" id="btnBuatAi">Buat Analisa AI</button>
+            <button class="btn" onclick="playNarasiAI()">Play</button>
+            <button class="btn secondary" onclick="stopNarasiAI()">Stop</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = {
+      SHEET_ID: '1ccDgtXNATxSYMZuDgd3polvRiTFNiFnjIGMP7b9qmrU',
+      SHEETS: {
+        index: 'INDEX_RAPOT',
+        sirup: 'SIRUP_STRUKTUR_ANGGARAN',
+        perencanaan: 'PERENCANAAN',
+        realisasi: 'REALISASI',
+        analisis: 'ANALISIS_MANUAL',
+        itkp: 'ITKP'
+      }
+    };
+
+    const id = new URLSearchParams(window.location.search).get('id') || '';
+
+    let aiVoiceText = '';
+    let currentUtterance = null;
+    let isSpeaking = false;
+    let voiceProgressTimer = null;
+    let voiceDurationEstimateMs = 0;
+    let voiceElapsedBeforePauseMs = 0;
+    let voiceStartedAtMs = 0;
+
+    function csvUrlBySheetName(sheetId, sheetName) {
+      return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+    }
+
+    function fetchSheet(sheetName) {
+      return new Promise((resolve, reject) => {
+        Papa.parse(csvUrlBySheetName(CONFIG.SHEET_ID, sheetName), {
+          download: true,
+          header: true,
+          skipEmptyLines: true,
+          complete: function(results) {
+            resolve(results.data || []);
+          },
+          error: function(err) {
+            reject(err);
+          }
+        });
+      });
+    }
+
+    function esc(v) {
+      return String(v || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.innerText = (value === undefined || value === null || value === '') ? '-' : value;
+    }
+
+    function setHtml(id, html) {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = html || '-';
+    }
+
+    function failureMessage(err) {
+      if (!err) return 'Unknown error';
+      if (typeof err === 'string') return err;
+      return err.message || JSON.stringify(err);
+    }
+
+    function extractDriveFileId(url) {
+      const val = String(url || '').trim();
+      if (!val) return '';
+
+      const patterns = [
+        /\/d\/([a-zA-Z0-9_-]+)/,
+        /[?&]id=([a-zA-Z0-9_-]+)/,
+        /^([a-zA-Z0-9_-]{20,})$/
+      ];
+
+      for (const p of patterns) {
+        const m = val.match(p);
+        if (m && m[1]) return m[1];
+      }
+
+      const generic = val.match(/[-\w]{25,}/);
+      return generic ? generic[0] : '';
+    }
+
+    function driveImageUrl(url) {
+      const fileId = extractDriveFileId(url);
+      if (!fileId) return '';
+      return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(fileId) + '&sz=w1600';
+    }
+
+    function isImageLike(url) {
+      const val = String(url || '').toLowerCase().trim();
+      if (!val) return false;
+      return (
+        val.includes('.png') ||
+        val.includes('.jpg') ||
+        val.includes('.jpeg') ||
+        val.includes('.webp') ||
+        val.includes('drive.google.com')
+      );
+    }
+
+    function renderImageOrLink(url, label) {
+      const val = String(url || '').trim();
+      if (!val) return '<div class="muted">Tidak ada file.</div>';
+
+      if (isImageLike(val)) {
+        const imgSrc = driveImageUrl(val) || val;
+        return `
+          <div class="img-box">
+            <img src="${esc(imgSrc)}" alt="${esc(label)}"
+              onerror="this.parentNode.outerHTML='<div class=&quot;link-box&quot;><a href=&quot;${esc(val)}&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;>Buka file ${esc(label)}</a></div>';"/>
+          </div>
+          <div class="muted" style="margin-top:8px;"><a href="${esc(val)}" target="_blank" rel="noopener noreferrer">Buka file asli</a></div>
+        `;
+      }
+
+      return `<div class="link-box"><a href="${esc(val)}" target="_blank" rel="noopener noreferrer">Buka file ${esc(label)}</a></div>`;
+    }
+
+    function renderLinkOnly(url, label) {
+      const val = String(url || '').trim();
+      if (!val) return '<div class="muted">Tidak ada file.</div>';
+      return `<div class="link-box"><a href="${esc(val)}" target="_blank" rel="noopener noreferrer">Buka file ${esc(label)}</a></div>`;
+    }
+
+    function parseMoney(value) {
+      if (value == null) return 0;
+      if (typeof value === 'number') return value;
+
+      let str = String(value).trim();
+      if (!str || str === '-') return 0;
+
+      str = str.replace(/Rp/gi, '')
+               .replace(/\s/g, '')
+               .replace(/\./g, '')
+               .replace(/,/g, '.')
+               .replace(/[^\d.-]/g, '');
+
+      const num = parseFloat(str);
+      return isNaN(num) ? 0 : num;
+    }
+
+    function parseInteger(value) {
+      if (value == null) return 0;
+      if (typeof value === 'number') return Math.round(value);
+
+      const str = String(value).trim();
+      if (!str || str === '-') return 0;
+
+      const cleaned = str.replace(/[^\d-]/g, '');
+      const num = parseInt(cleaned, 10);
+      return isNaN(num) ? 0 : num;
+    }
+
+    function formatMoney(num) {
+      const n = parseMoney(num);
+      return new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(n);
+    }
+
+    function formatInteger(num) {
+      const n = parseInteger(num);
+      return new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(n);
+    }
+
+    function formatPercentValue(value) {
+      if (value == null || value === '') return '-';
+
+      if (typeof value === 'number') {
+        return new Intl.NumberFormat('id-ID', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2
+        }).format(value) + '%';
+      }
+
+      const str = String(value).trim();
+      if (!str || str === '-') return '-';
+
+      if (str.includes('%')) {
+        const clean = parseMoney(str.replace('%', ''));
+        return new Intl.NumberFormat('id-ID', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2
+        }).format(clean) + '%';
+      }
+
+      const num = parseMoney(str);
+      return new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      }).format(num) + '%';
+    }
+
+    function formatPercentFixed2(value) {
+      if (value == null || value === '') return '-';
+
+      let num = 0;
+
+      if (typeof value === 'number') {
+        num = value;
+      } else {
+        const str = String(value).trim();
+        if (!str || str === '-') return '-';
+        num = str.includes('%')
+          ? parseMoney(str.replace('%', ''))
+          : parseMoney(str);
+      }
+
+      return new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(num) + '%';
+    }
+
+    function monthLabel(bulan) {
+      const map = {
+        '1': 'JANUARI',
+        '2': 'FEBRUARI',
+        '3': 'MARET',
+        '4': 'APRIL',
+        '5': 'MEI',
+        '6': 'JUNI',
+        '7': 'JULI',
+        '8': 'AGUSTUS',
+        '9': 'SEPTEMBER',
+        '10': 'OKTOBER',
+        '11': 'NOVEMBER',
+        '12': 'DESEMBER'
+      };
+      return map[String(bulan)] || String(bulan || '-');
+    }
+
+    function renderBullets(text) {
+      const val = String(text || '').trim();
+      if (!val || val === '-') return '<div class="note-box muted">Tidak ada analisis manual.</div>';
+
+      const lines = val
+        .split(/\r?\n/)
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      if (lines.length <= 1) {
+        return `<div class="note-box">${esc(val)}</div>`;
+      }
+
+      return `
+        <div class="note-box">
+          <ul class="bullets">
+            ${lines.map(line => `<li>${esc(line.replace(/^[-•]\s*/, ''))}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    function normalizeRecordKeys(row) {
+      const out = {};
+      Object.keys(row || {}).forEach(key => {
+        const normalized = String(key || '')
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, '_');
+        out[normalized] = row[key];
+      });
+      return out;
+    }
+
+    function findRowById(rows, idRapot) {
+      return (rows || []).map(normalizeRecordKeys).find(r => String(r.id_rapot || '').trim() === String(idRapot || '').trim()) || {};
+    }
+
+    function formatVoiceTime(ms) {
+      const totalSeconds = Math.max(0, Math.floor((Number(ms || 0)) / 1000));
+      const mm = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+      const ss = String(totalSeconds % 60).padStart(2, '0');
+      return mm + ':' + ss;
+    }
+
+    function setVoiceProgress(elapsedMs, totalMs) {
+      const total = Math.max(0, Number(totalMs || 0));
+      const elapsed = Math.min(Math.max(0, Number(elapsedMs || 0)), total || Number(elapsedMs || 0));
+      const pct = total > 0 ? Math.min(100, (elapsed / total) * 100) : 0;
+
+      const fill = document.getElementById('voice_progress_fill');
+      if (fill) fill.style.width = pct + '%';
+
+      setText('voice_current_label', formatVoiceTime(elapsed));
+      setText('voice_total_label', formatVoiceTime(total));
+    }
+
+    function estimateSpeechDurationMs(text, rate) {
+      const wordCount = String(text || '').trim().split(/\s+/).filter(Boolean).length;
+      const wordsPerMinute = 165 * Math.max(0.7, Number(rate || 1));
+      const minutes = wordCount / Math.max(1, wordsPerMinute);
+      return Math.max(4000, Math.round(minutes * 60 * 1000));
+    }
+
+    function clearVoiceProgressTimer() {
+      if (voiceProgressTimer) {
+        clearInterval(voiceProgressTimer);
+        voiceProgressTimer = null;
+      }
+    }
+
+    function resetVoiceProgress(totalMs) {
+      clearVoiceProgressTimer();
+      voiceDurationEstimateMs = Number(totalMs || 0);
+      voiceElapsedBeforePauseMs = 0;
+      voiceStartedAtMs = 0;
+      setVoiceProgress(0, voiceDurationEstimateMs);
+    }
+
+    function runVoiceProgressTimer() {
+      clearVoiceProgressTimer();
+      voiceProgressTimer = setInterval(function() {
+        const now = Date.now();
+        const elapsed = voiceElapsedBeforePauseMs + Math.max(0, now - voiceStartedAtMs);
+        setVoiceProgress(elapsed, voiceDurationEstimateMs);
+      }, 120);
+    }
+
+    function startVoiceProgress(totalMs) {
+      voiceDurationEstimateMs = Number(totalMs || 0);
+      voiceElapsedBeforePauseMs = 0;
+      voiceStartedAtMs = Date.now();
+      setVoiceProgress(0, voiceDurationEstimateMs);
+      runVoiceProgressTimer();
+    }
+
+    function stopVoiceProgress() {
+      resetVoiceProgress(0);
+    }
+
+    function completeVoiceProgress() {
+      clearVoiceProgressTimer();
+      setVoiceProgress(voiceDurationEstimateMs, voiceDurationEstimateMs);
+      voiceElapsedBeforePauseMs = voiceDurationEstimateMs;
+      voiceStartedAtMs = 0;
+    }
+
+    function prepareVoices() {
+      if (!('speechSynthesis' in window)) {
+        setText('voice_status_box', 'Browser ini tidak mendukung suara AI bawaan.');
+        return;
+      }
+      window.speechSynthesis.getVoices();
+    }
+
+    if ('speechSynthesis' in window && typeof speechSynthesis.onvoiceschanged !== 'undefined') {
+      speechSynthesis.onvoiceschanged = function() {
+        prepareVoices();
+      };
+    }
+
+    function getPreferredVoice() {
+      if (!('speechSynthesis' in window)) return null;
+
+      const voices = window.speechSynthesis.getVoices() || [];
+      if (!voices.length) return null;
+
+      return (
+        voices.find(v => String(v.lang || '').toLowerCase() === 'id-id') ||
+        voices.find(v => String(v.lang || '').toLowerCase().startsWith('id')) ||
+        voices.find(v => String(v.lang || '').toLowerCase().startsWith('en')) ||
+        null
+      );
+    }
+
+    function getNarrationTextForSpeech() {
+      const fromAi = String(aiVoiceText || '').trim();
+      if (fromAi) return fromAi;
+
+      const box = document.getElementById('narasi_ai_box');
+      const fromBox = box ? String(box.innerText || '').trim() : '';
+
+      if (!fromBox) return '';
+      if (fromBox === 'Belum ada Analisa AI.') return '';
+      if (fromBox.indexOf('Fitur AI publik belum aktif.') === 0) return '';
+
+      return fromBox;
+    }
+
+    function playNarasiAI() {
+      if (!('speechSynthesis' in window)) {
+        setText('voice_status_box', 'Browser ini tidak mendukung suara AI bawaan.');
+        return;
+      }
+
+      const text = getNarrationTextForSpeech();
+      if (!text) {
+        setText('voice_status_box', 'Analisa AI belum tersedia untuk dibacakan.');
+        return;
+      }
+
+      const rate = 1.12;
+      const pitch = 1.08;
+      const estimatedDuration = estimateSpeechDurationMs(text, rate);
+
+      window.speechSynthesis.cancel();
+      isSpeaking = false;
+
+      aiVoiceText = text;
+      currentUtterance = new SpeechSynthesisUtterance(text);
+      currentUtterance.lang = 'id-ID';
+      currentUtterance.rate = rate;
+      currentUtterance.pitch = pitch;
+      currentUtterance.volume = 1.0;
+
+      const chosenVoice = getPreferredVoice();
+      if (chosenVoice) currentUtterance.voice = chosenVoice;
+
+      currentUtterance.onstart = function() {
+        isSpeaking = true;
+        startVoiceProgress(estimatedDuration);
+        setText('voice_status_box', 'Sedang membacakan Analisa AI...');
+      };
+
+      currentUtterance.onend = function() {
+        isSpeaking = false;
+        currentUtterance = null;
+        completeVoiceProgress();
+        setText('voice_status_box', 'Selesai membacakan Analisa AI.');
+      };
+
+      currentUtterance.onerror = function(e) {
+        isSpeaking = false;
+        currentUtterance = null;
+        stopVoiceProgress();
+        setText('voice_status_box', 'Gagal memutar suara AI: ' + (e && e.error ? e.error : 'unknown error'));
+      };
+
+      setTimeout(function() {
+        window.speechSynthesis.speak(currentUtterance);
+      }, 120);
+    }
+
+    function stopNarasiAI() {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      isSpeaking = false;
+      currentUtterance = null;
+      stopVoiceProgress();
+      setText('voice_status_box', 'Suara dihentikan.');
+    }
+
+    function toggleNarasiSection() {
+      const body = document.getElementById('narasi_ai_body');
+      const btn = document.getElementById('narasi_toggle_btn');
+      if (!body || !btn) return;
+
+      const hidden = body.style.display === 'none';
+      body.style.display = hidden ? 'block' : 'none';
+      btn.innerText = hidden ? 'Minimize' : 'Tampilkan';
+    }
+
+    function setPublicAiFallback(analisisText) {
+      const text = String(analisisText || '').trim();
+      if (text) {
+        setText('narasi_ai_box', text);
+        aiVoiceText = text;
+        setText('voice_status_box', 'Klik "Play" untuk membacakan analisa.');
+      } else {
+        setText('narasi_ai_box', 'Fitur AI publik belum aktif.');
+        aiVoiceText = '';
+        setText('voice_status_box', 'Analisa AI belum tersedia untuk dibacakan.');
+      }
+    }
+
+    function render(data) {
+      const index = data.index || {};
+      const sirup = data.sirup || {};
+      const perencanaan = data.perencanaan || {};
+      const realisasi = data.realisasi || {};
+      const analisis = data.analisis_manual || {};
+      const itkp = data.itkp || {};
+
+      document.getElementById('status').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+
+      const bulanText = monthLabel(index.bulan);
+      const tahunText = index.tahun || '-';
+
+      setText('v_id_rapot', index.id_rapot || '-');
+      setText('v_tahun', tahunText);
+      setText('v_bulan', index.bulan || '-');
+      setText('v_status_qc', index.status_qc || '-');
+      setText('v_kode_opd', index.kode_opd || '-');
+      setText('v_nama_opd', index.nama_opd || '-');
+
+      setText('cover_nama_opd', index.nama_opd || '-');
+      setText('cover_periode', 'PERIODE ' + bulanText + ' ' + tahunText);
+
+      setText(
+        'metaHeader',
+        'OPD: ' + (index.nama_opd || '-') +
+        ' | Input By: ' + (index.input_by || '-') +
+        ' | Updated At: ' + (index.updated_at || '-')
+      );
+
+      setText('sirup_penyedia', formatMoney(sirup.total_pagu_penyedia));
+      setText('sirup_swakelola', formatMoney(sirup.total_pagu_swakelola));
+      setText('sirup_total', formatMoney(sirup.total_pagu_sirup));
+      setText('sirup_struktur', formatMoney(sirup.total_struktur_anggaran_rup));
+      setText('sirup_persentase', formatPercentValue(sirup.persentase));
+
+      setText('sirup_penyedia_2', formatMoney(sirup.total_pagu_penyedia));
+      setText('sirup_swakelola_2', formatMoney(sirup.total_pagu_swakelola));
+      setText('sirup_total_2', formatMoney(sirup.total_pagu_sirup));
+      setText('sirup_struktur_2', formatMoney(sirup.total_struktur_anggaran_rup));
+      setText('sirup_persentase_2', formatPercentValue(sirup.persentase));
+
+      setHtml(
+        'img_struktur',
+        renderImageOrLink(
+          sirup.file_screenshot || sirup.file_screenshot_struktur_anggaran || sirup.link_screenshot_struktur || '',
+          'Struktur Anggaran'
+        )
+      );
+
+      const pPaketTender = parseInteger(perencanaan.paket_tender_seleksi);
+      const pPaketNon = parseInteger(perencanaan.paket_non_tender);
+      const pPaketEpur = parseInteger(perencanaan.paket_epurchasing);
+      const pPaketCatat = parseInteger(perencanaan.paket_pencatatan);
+      const pPaketSwak = parseInteger(perencanaan.paket_swakelola);
+
+      const pPaguTender = parseMoney(perencanaan.pagu_tender_seleksi);
+      const pPaguNon = parseMoney(perencanaan.pagu_non_tender);
+      const pPaguEpur = parseMoney(perencanaan.pagu_epurchasing);
+      const pPaguCatat = parseMoney(perencanaan.pagu_pencatatan);
+      const pPaguSwak = parseMoney(perencanaan.pagu_swakelola);
+
+      const totalPaket = pPaketTender + pPaketNon + pPaketEpur + pPaketCatat + pPaketSwak;
+      const totalPagu = pPaguTender + pPaguNon + pPaguEpur + pPaguCatat + pPaguSwak;
+
+      setText('p_paket_tender', formatInteger(pPaketTender));
+      setText('p_pagu_tender', formatMoney(pPaguTender));
+      setText('p_paket_non', formatInteger(pPaketNon));
+      setText('p_pagu_non', formatMoney(pPaguNon));
+      setText('p_paket_epur', formatInteger(pPaketEpur));
+      setText('p_pagu_epur', formatMoney(pPaguEpur));
+      setText('p_paket_catat', formatInteger(pPaketCatat));
+      setText('p_pagu_catat', formatMoney(pPaguCatat));
+      setText('p_paket_swak', formatInteger(pPaketSwak));
+      setText('p_pagu_swak', formatMoney(pPaguSwak));
+
+      setText('p_pct_tender', totalPagu ? formatPercentFixed2((pPaguTender / totalPagu) * 100) : '0,00%');
+      setText('p_pct_non', totalPagu ? formatPercentFixed2((pPaguNon / totalPagu) * 100) : '0,00%');
+      setText('p_pct_epur', totalPagu ? formatPercentFixed2((pPaguEpur / totalPagu) * 100) : '0,00%');
+      setText('p_pct_catat', totalPagu ? formatPercentFixed2((pPaguCatat / totalPagu) * 100) : '0,00%');
+      setText('p_pct_swak', totalPagu ? formatPercentFixed2((pPaguSwak / totalPagu) * 100) : '0,00%');
+
+      setText('p_total_paket', formatInteger(totalPaket));
+      setText('p_total_pagu', formatMoney(totalPagu));
+      setText('p_total_pct', formatPercentFixed2(100));
+
+      setText('rp_paket_tender', formatInteger(pPaketTender));
+      setText('rp_pagu_tender', formatMoney(pPaguTender));
+      setText('rp_paket_non', formatInteger(pPaketNon));
+      setText('rp_pagu_non', formatMoney(pPaguNon));
+      setText('rp_paket_epur', formatInteger(pPaketEpur));
+      setText('rp_pagu_epur', formatMoney(pPaguEpur));
+      setText('rp_paket_catat', formatInteger(pPaketCatat));
+      setText('rp_pagu_catat', formatMoney(pPaguCatat));
+      setText('rp_paket_swak', formatInteger(pPaketSwak));
+      setText('rp_pagu_swak', formatMoney(pPaguSwak));
+      setText('rp_total_paket', formatInteger(totalPaket));
+      setText('rp_total_pagu', formatMoney(totalPagu));
+
+      const rPaketTender = parseInteger(realisasi.realisasi_paket_tender_seleksi);
+      const rPaketNon = parseInteger(realisasi.realisasi_paket_non_tender);
+      const rPaketEpur = parseInteger(realisasi.realisasi_paket_epurchasing);
+      const rPaketCatat = parseInteger(realisasi.realisasi_paket_pencatatan);
+      const rPaketSwak = parseInteger(realisasi.realisasi_paket_swakelola);
+
+      const rAngTender = parseMoney(realisasi.realisasi_tender_seleksi);
+      const rAngNon = parseMoney(realisasi.realisasi_non_tender);
+      const rAngEpur = parseMoney(realisasi.realisasi_epurchasing);
+      const rAngCatat = parseMoney(realisasi.realisasi_pencatatan);
+      const rAngSwak = parseMoney(realisasi.realisasi_swakelola);
+
+      const totalRealisasiPaket = rPaketTender + rPaketNon + rPaketEpur + rPaketCatat + rPaketSwak;
+      const totalRealisasiAnggaran = rAngTender + rAngNon + rAngEpur + rAngCatat + rAngSwak;
+
+      setText('r_paket_tender', formatInteger(rPaketTender));
+      setText('r_anggaran_tender', formatMoney(rAngTender));
+      setText('r_paket_non', formatInteger(rPaketNon));
+      setText('r_anggaran_non', formatMoney(rAngNon));
+      setText('r_paket_epur', formatInteger(rPaketEpur));
+      setText('r_anggaran_epur', formatMoney(rAngEpur));
+      setText('r_paket_catat', formatInteger(rPaketCatat));
+      setText('r_anggaran_catat', formatMoney(rAngCatat));
+      setText('r_paket_swak', formatInteger(rPaketSwak));
+      setText('r_anggaran_swak', formatMoney(rAngSwak));
+      setText('r_total_paket', formatInteger(totalRealisasiPaket));
+      setText('r_total_anggaran', formatMoney(totalRealisasiAnggaran));
+
+      setText('pelaku_jumlah', '-');
+      setText('pelaku_daftar', 'Data pelaku tidak dipublikasikan pada file dashboard publik.');
+      setHtml('pelaku_file', '<div class="muted">Data dokumen pendukung tidak dipublikasikan.</div>');
+
+      setHtml(
+        'img_itkp',
+        renderImageOrLink(
+          itkp.file_screenshot || itkp.file_screenshot_itkp || itkp.file_url || '',
+          'ITKP'
+        )
+      );
+
+      setHtml('analisis_manual', renderBullets(analisis.kesimpulan_progres || '-'));
+
+      resetVoiceProgress(0);
+      prepareVoices();
+      setPublicAiFallback(analisis.kesimpulan_progres || '');
+    }
+
+    async function loadReportData() {
+      if (!id) {
+        document.getElementById('status').innerText = 'Parameter id kosong.';
+        return;
+      }
+
+      try {
+        const [
+          indexRows,
+          sirupRows,
+          perencanaanRows,
+          realisasiRows,
+          analisisRows,
+          itkpRows
+        ] = await Promise.all([
+          fetchSheet(CONFIG.SHEETS.index),
+          fetchSheet(CONFIG.SHEETS.sirup),
+          fetchSheet(CONFIG.SHEETS.perencanaan),
+          fetchSheet(CONFIG.SHEETS.realisasi),
+          fetchSheet(CONFIG.SHEETS.analisis),
+          fetchSheet(CONFIG.SHEETS.itkp)
+        ]);
+
+        const data = {
+          index: findRowById(indexRows, id),
+          sirup: findRowById(sirupRows, id),
+          perencanaan: findRowById(perencanaanRows, id),
+          realisasi: findRowById(realisasiRows, id),
+          analisis_manual: findRowById(analisisRows, id),
+          itkp: findRowById(itkpRows, id)
+        };
+
+        if (!data.index.id_rapot) {
+          document.getElementById('status').innerText = 'Data report tidak ditemukan untuk ID: ' + id;
+          return;
+        }
+
+        render(data);
+      } catch (err) {
+        document.getElementById('status').innerText =
+          'Error server: ' + failureMessage(err);
+      }
+    }
+
+    loadReportData();
+  </script>
+</body>
+</html>
