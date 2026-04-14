@@ -855,27 +855,23 @@
 function formatPercentValue(value) {
   if (value == null || value === '') return '-';
 
+  let num = 0;
+
   if (typeof value === 'number') {
-    return new Intl.NumberFormat('id-ID', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    }).format(value) + '%';
+    num = value;
+  } else {
+    const str = String(value).trim();
+    if (!str || str === '-') return '-';
+
+    if (str.includes('%')) {
+      num = parseMoney(str.replace('%', ''));
+    } else {
+      num = parseMoney(str);
+    }
   }
 
-  const str = String(value).trim();
-  if (!str || str === '-') return '-';
-
-  if (str.includes('%')) {
-    const clean = parseMoney(str.replace('%', ''));
-    return new Intl.NumberFormat('id-ID', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    }).format(clean) + '%';
-  }
-
-  const num = parseMoney(str);
   return new Intl.NumberFormat('id-ID', {
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(num) + '%';
 }
@@ -1171,17 +1167,23 @@ function formatPercentValue(value) {
         ' | Updated At: ' + (index.updated_at || '-')
       );
 
+const totalPaguSirupNum = parseMoney(sirup.total_pagu_sirup);
+const totalStrukturNum = parseMoney(sirup.total_struktur_anggaran_rup);
+const persenSirupHitung = totalStrukturNum > 0
+  ? (totalPaguSirupNum / totalStrukturNum) * 100
+  : 0;
+
 setText('sirup_penyedia', formatMoney(sirup.total_pagu_penyedia));
 setText('sirup_swakelola', formatMoney(sirup.total_pagu_swakelola));
 setText('sirup_total', formatMoney(sirup.total_pagu_sirup));
 setText('sirup_struktur', formatMoney(sirup.total_struktur_anggaran_rup));
-setText('sirup_persentase', formatPercentValue(sirup.persentase));
+setText('sirup_persentase', formatPercentValue(persenSirupHitung));
 
 setText('sirup_penyedia_2', formatMoney(sirup.total_pagu_penyedia));
 setText('sirup_swakelola_2', formatMoney(sirup.total_pagu_swakelola));
 setText('sirup_total_2', formatMoney(sirup.total_pagu_sirup));
 setText('sirup_struktur_2', formatMoney(sirup.total_struktur_anggaran_rup));
-setText('sirup_persentase_2', formatPercentValue(sirup.persentase));
+setText('sirup_persentase_2', formatPercentValue(persenSirupHitung));
       
       setHtml(
         'img_struktur',
